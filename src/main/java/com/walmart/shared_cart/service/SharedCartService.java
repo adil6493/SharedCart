@@ -36,11 +36,12 @@ public class SharedCartService {
     public String createSharedCart(User user, Item item) {
         String uniqueUrl = RandomStringUtils.randomAlphanumeric(7);
         List<User> members = new ArrayList<>();
-        List<Item> cartItems = new ArrayList<>();
+        user.getUserItems().add(item);
+        user.setTotalAmount(item.getPrice());
+        user.setSharedCartUrl(uniqueUrl);
         members.add(user);
-        cartItems.add(item);
         double cartTotal = item.getPrice();
-        SharedCart sharedCart = new SharedCart(uniqueUrl, "Default Name", user, members, cartItems,cartTotal, user.getAddress().getZipCode(), 1);
+        SharedCart sharedCart = new SharedCart(uniqueUrl, "Default Name", user, members,cartTotal, user.getAddress().getZipCode(), 1);
         sharedCartRepo.addSharedCartDetails(uniqueUrl, sharedCart);
         return BASE_URL + uniqueUrl;
     }
@@ -63,31 +64,10 @@ public class SharedCartService {
         int sharedCartPinCode = sharedCart.getZipcode();
         int userZipCode = user.getAddress().getZipCode();
         if (sharedCartPinCode == userZipCode) {
+            user.setSharedCartUrl(cartUrl);
             sharedCart.getCartMembers().add(user);
         }
         return sharedCartRepo.addSharedCartDetails(cartUrl, sharedCart);
-    }
-
-    public SharedCart addItem(String cartUrl, Item item) {
-        SharedCart sharedCart = getSharedCartDetails(cartUrl);
-        if (sharedCart == null) {
-            System.out.println("Failed to add item to the cart");
-            return null;
-        }
-        List<Item> sharedCartItems = sharedCart.getSharedCartItems();
-        if (sharedCartItems.stream().anyMatch(x->(x.getId() == (item.getId())))) {
-            int count = item.getItemCount() + 1;
-            item.setItemCount(count);
-            double cartTotal = sharedCart.getCartTotal() + item.getPrice();
-            sharedCart.setCartTotal(cartTotal);
-            return sharedCartRepo.addSharedCartDetails(cartUrl, sharedCart);
-        }
-        else {
-            double cartTotal = sharedCart.getCartTotal() + item.getPrice();
-            sharedCart.setCartTotal(cartTotal);
-            sharedCart.getSharedCartItems().add(item);
-            return sharedCartRepo.addSharedCartDetails(cartUrl, sharedCart);
-        }
     }
 
     public SharedCart deleteUser(String cartUrl, User user) {
@@ -105,26 +85,9 @@ public class SharedCartService {
         return sharedCartRepo.addSharedCartDetails(cartUrl, sharedCart);
     }
 
-    public SharedCart deleteItem(String cartUrl, Item item) {
-        SharedCart sharedCart = getSharedCartDetails(cartUrl);
 
-        if (sharedCart == null) {
-            System.out.println("Failed to remove item from the shared cart");
-            return null;
-        }
-
-        List<Item> sharedCartItems = sharedCart.getSharedCartItems();
-        if (sharedCartItems.stream().anyMatch(x->(x.getId() == (item.getId())))) {
-            int count = item.getItemCount() - 1;
-            item.setItemCount(count);
-            double cartTotal = sharedCart.getCartTotal() - item.getPrice();
-            sharedCart.setCartTotal(cartTotal);
-            if (item.getItemCount() == 0) {
-                sharedCart.getSharedCartItems().remove(item);
-            }
-        }
-        return sharedCartRepo.addSharedCartDetails(cartUrl, sharedCart);
+    public double getSharedCartTotal(String cartUrl) {
+        SharedCart sharedCart = sharedCartRepo.getById(cartUrl);
+        return sharedCart.getCartTotal();
     }
-
-
 }
