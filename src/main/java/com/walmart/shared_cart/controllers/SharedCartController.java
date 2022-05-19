@@ -1,21 +1,22 @@
 package com.walmart.shared_cart.controllers;
 
-import com.walmart.shared_cart.models.Address;
+import com.walmart.shared_cart.dto.CreateSharedCartDto;
 import com.walmart.shared_cart.models.Item;
 import com.walmart.shared_cart.models.SharedCart;
 import com.walmart.shared_cart.models.User;
 import com.walmart.shared_cart.service.ItemService;
 import com.walmart.shared_cart.service.SharedCartService;
 import com.walmart.shared_cart.service.UserService;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/sharedCart")
+@CrossOrigin(origins = "http://localhost:3000")
 public class SharedCartController {
 
     @Autowired
@@ -38,18 +39,28 @@ public class SharedCartController {
     }
 
     @GetMapping("/user/{userId}")
-    public Collection<SharedCart> getUsersSharedCarts() {
-        return sharedCartService.getAllSharedCarts();
+    public Collection<SharedCart> getUsersSharedCarts(@PathVariable Long userId) {
+        List<SharedCart> userShareCarts = new ArrayList<>();
+        Collection<SharedCart> allSharedCarts = sharedCartService.getAllSharedCarts();
+        for (SharedCart cart : allSharedCarts) {
+            for (User member : cart.getCartMembers()) {
+                if (member.getUserId().equals(userId)) {
+                    userShareCarts.add(cart);
+                    break;
+                }
+            }
+        }
+        return userShareCarts;
     }
 
-    @PostMapping("/{userId}/{itemId}/create")
-    public String createSharedCart(@PathVariable Long userId, @PathVariable int itemId) {
+    @PostMapping("/{userId}/create")
+    public String createSharedCart(@PathVariable Long userId, @RequestBody CreateSharedCartDto dto) {
         User user = userService.getUser(userId);
-        Item item = itemService.getItemById(itemId);
+        Item item = itemService.getItemById(dto.getItemId());
         if (user == null || item == null) {
             return "ERROR";
         }
-        return sharedCartService.createSharedCart(user, item);
+        return sharedCartService.createSharedCart(user, item, dto.getCartName());
     }
 
     @PostMapping("/{cartUrl}/{userId}/add")

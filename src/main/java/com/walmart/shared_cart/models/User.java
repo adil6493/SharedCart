@@ -3,6 +3,8 @@ package com.walmart.shared_cart.models;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 public class User {

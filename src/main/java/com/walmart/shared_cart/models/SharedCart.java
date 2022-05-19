@@ -8,6 +8,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class SharedCart {
+    private String id;
+
     private String cartUrl;
 
     private String cartName;

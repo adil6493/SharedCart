@@ -19,6 +19,10 @@ public class UserRepo {
     @PostConstruct
     private void postConstruct() {
         this.userMap = new HashMap<>();
+        User defaultUser = new User(currUserId, "Chandler", "Bing",
+                new Address(0, 0, "90", "Bedford Street", "New York", "New York", "US", 10028));
+        userMap.put(currUserId, defaultUser);
+
         this.currUserId = 10000L;
         this.currAddressId = 800L;
         User chandler = new User(currUserId, "Chandler", "Bing",

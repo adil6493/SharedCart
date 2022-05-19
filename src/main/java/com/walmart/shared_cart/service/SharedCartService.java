@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 public class SharedCartService {
 
-    private static final String BASE_URL = "http://localhost:3000/";
+    private static final String BASE_URL = "http://localhost:3000/r/";
 
     @Autowired
     SharedCartRepo sharedCartRepo;
@@ -33,14 +33,15 @@ public class SharedCartService {
         return sharedCartRepo.getAll().stream().filter(sc -> sc.getOwner().getUserId().equals(userId)).collect(Collectors.toList());
     }
 
-    public String createSharedCart(User user, Item item) {
+    public String createSharedCart(User user, Item item, String cartName) {
         String uniqueUrl = RandomStringUtils.randomAlphanumeric(7);
+        String cartUrl = BASE_URL + uniqueUrl;
         List<User> members = new ArrayList<>();
         List<Item> cartItems = new ArrayList<>();
         members.add(user);
         cartItems.add(item);
         double cartTotal = item.getPrice();
-        SharedCart sharedCart = new SharedCart(uniqueUrl, "Default Name", user, members, cartItems,cartTotal, user.getAddress().getZipCode(), 1);
+        SharedCart sharedCart = new SharedCart(uniqueUrl, cartUrl, cartName, user, members, cartItems, cartTotal, user.getAddress().getZipCode(), 1);
         sharedCartRepo.addSharedCartDetails(uniqueUrl, sharedCart);
         return BASE_URL + uniqueUrl;
     }
@@ -75,14 +76,13 @@ public class SharedCartService {
             return null;
         }
         List<Item> sharedCartItems = sharedCart.getSharedCartItems();
-        if (sharedCartItems.stream().anyMatch(x->(x.getId() == (item.getId())))) {
+        if (sharedCartItems.stream().anyMatch(x -> (x.getId() == (item.getId())))) {
             int count = item.getItemCount() + 1;
             item.setItemCount(count);
             double cartTotal = sharedCart.getCartTotal() + item.getPrice();
             sharedCart.setCartTotal(cartTotal);
             return sharedCartRepo.addSharedCartDetails(cartUrl, sharedCart);
-        }
-        else {
+        } else {
             double cartTotal = sharedCart.getCartTotal() + item.getPrice();
             sharedCart.setCartTotal(cartTotal);
             sharedCart.getSharedCartItems().add(item);
@@ -114,7 +114,7 @@ public class SharedCartService {
         }
 
         List<Item> sharedCartItems = sharedCart.getSharedCartItems();
-        if (sharedCartItems.stream().anyMatch(x->(x.getId() == (item.getId())))) {
+        if (sharedCartItems.stream().anyMatch(x -> (x.getId() == (item.getId())))) {
             int count = item.getItemCount() - 1;
             item.setItemCount(count);
             double cartTotal = sharedCart.getCartTotal() - item.getPrice();
